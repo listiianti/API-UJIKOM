@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\DetailPinjam;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -13,12 +12,13 @@ class Peminjaman extends Model
     protected $table = 'peminjaman';
 
     protected $fillable = [
-        'user_id', 
-        'tgl_pinjam', 
-        'tgl_kembali_plan', 
-        'status'
-    ];
-
+    'user_id',
+    'tgl_pinjam',
+    'tgl_kembali_plan',
+    'status',
+    'kondisi_kembali', 
+    'denda',           
+];
     protected function casts(): array 
     {
         return [
@@ -27,19 +27,19 @@ class Peminjaman extends Model
         ];
     }
     
-    public function user(): BelongsTo 
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
+    public function user(): BelongsTo
+{
+    return $this->belongsTo(User::class)->withTrashed();
+}
 
-    // Menggunakan detailPinjam() agar cocok dengan AdminController
+    // Diubah menjadi jamak (detailPinjams) agar cocok dengan Controller Anda
     public function detailPinjams(): HasMany 
     {
-        return $this->hasMany(DetailPinjam::class, 'peminjaman_id');
+        return $this->hasMany(DetailPinjam::class);
     }
 
     public function pengembalian(): HasOne 
     {
-        return $this->hasOne(Pengembalian::class, 'peminjaman_id');
+        return $this->hasOne(Pengembalian::class);
     }
 }

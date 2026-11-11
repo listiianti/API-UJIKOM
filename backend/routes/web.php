@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PetugasController;
 use App\Http\Controllers\PeminjamController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -37,6 +38,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/kategori/{id}/edit', [AdminController::class, 'editKategori'])->name('kategori.edit');
     Route::put('/kategori/{id}', [AdminController::class, 'updateKategori'])->name('kategori.update');
     Route::delete('/kategori/{id}', [AdminController::class, 'destroyKategori'])->name('kategori.destroy');
+
+    // CRUD Log Aktivitas
+    Route::get('/logaktivitas', [AdminController::class, 'indexLogAktivitas'])->name('logaktivitas.index');
 
     // CRUD Peminjaman
     Route::get('/peminjaman', [AdminController::class, 'indexPeminjaman'])->name('peminjaman.index');
@@ -82,11 +86,46 @@ Route::middleware(['auth', 'role:peminjam'])->prefix('peminjam')->name('peminjam
     Route::get('/peminjaman/riwayat', [PeminjamController::class, 'riwayatPeminjaman'])->name('peminjaman.riwayat');
 });
 
+// Peminjam profile
+Route::middleware('auth')->group(function(){
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/update', [ProfileController::class, 'update'])->name('profile.peminjam');
+});
+
+
 // Route Tamu (Belum Login)
 Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+
+    // Login
+    Route::get('/login', [AuthController::class, 'showLoginForm'])
+        ->name('login');
+
+    Route::post('/login', [AuthController::class, 'login'])
+        ->name('login.process');
+
+    // Register
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])
+        ->name('register');
+
+    Route::post('/register', [AuthController::class, 'register'])
+        ->name('register.store');
+
 });
 
 // Route Logout (Harus sudah login)
+Route::post('/logout', [AuthController::class, 'logout'])
+    ->name('logout')
+    ->middleware('auth');
+
+// Route Logout (Harus sudah login)
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+
+//route profile
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profil', [ProfileController::class, 'edit'])
+        ->name('profile.edit');
+
+    Route::put('/profil', [ProfileController::class, 'update'])
+        ->name('profile.update');
+});

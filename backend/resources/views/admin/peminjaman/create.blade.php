@@ -18,12 +18,25 @@
     .select2-container--default .select2-selection--single .select2-selection__arrow {
         height: 40px;
     }
+    .select2-container {
+        width: 100% !important;
+    }
 </style>
 
 <div class="max-w-2xl bg-white rounded-lg shadow-sm border border-gray-200 p-6">
     @if(session('error'))
         <div class="mb-4 bg-red-50 border border-red-200 text-red-800 p-3 rounded-lg text-sm">
             {{ session('error') }}
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="mb-4 bg-red-50 border border-red-200 text-red-800 p-3 rounded-lg text-sm">
+            <ul class="list-disc list-inside">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
@@ -68,7 +81,7 @@
                         </select>
                     </div>
                     <input type="number" name="jumlah[]" value="1" min="1" placeholder="Jumlah" required
-                        class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none">
+                        class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <button type="button" onclick="removeRow(this)" class="bg-red-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-600 transition">✕</button>
                 </div>
             </div>
@@ -85,42 +98,53 @@
     </form>
 </div>
 
+<!-- Template tersembunyi untuk penambahan baris alat secara dinamis -->
+<template id="alat-row-template">
+    <div class="flex items-center gap-2 alat-row">
+        <div class="flex-1">
+            <select name="alat_id[]" required class="select2-alat w-full">
+                <option value="">-- Pilih Alat --</option>
+                @foreach($alats as $alat)
+                    <option value="{{ $alat->id }}">{{ $alat->nama_alat }} (Stok: {{ $alat->stok }})</option>
+                @endforeach
+            </select>
+        </div>
+        <input type="number" name="jumlah[]" value="1" min="1" placeholder="Jumlah" required
+            class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button type="button" onclick="removeRow(this)" class="bg-red-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-600 transition">✕</button>
+    </div>
+</template>
+
 <!-- Include JS JQuery & Select2 -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
     $(document).ready(function() {
-        initSelect2();
+        initSelect2($('body'));
     });
 
-    function initSelect2() {
-        $('.select2-search').select2({
+    function initSelect2(context) {
+        context.find('.select2-search').select2({
             placeholder: "-- Pilih User --",
             allowClear: true
         });
 
-        $('.select2-alat').select2({
+        context.find('.select2-alat').select2({
             placeholder: "-- Pilih Alat --",
             allowClear: true
         });
     }
 
     function addRow() {
+        const template = document.getElementById('alat-row-template').content.cloneNode(true);
         const container = document.getElementById('alat-container');
-        const firstRow = container.querySelector('.alat-row');
         
-        // Destroy instance Select2 sebelum me-clone elemen HTML
-        $(firstRow).find('.select2-alat').select2('destroy');
-        
-        const newRow = firstRow.cloneNode(true);
-        newRow.querySelector('select').value = '';
-        newRow.querySelector('input').value = '1';
-        
-        container.appendChild(newRow);
+        const $newRow = $(template);
+        container.appendChild($newRow[0]);
 
-        // Inisialisasi ulang Select2 untuk elemen lama & elemen baru
-        initSelect2();
+        // Inisialisasi Select2 khusus hanya untuk baris baru
+        initSelect2($('#alat-container .alat-row').last());
     }
 
     function removeRow(button) {
